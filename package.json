@@ -17,9 +17,14 @@
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": ["Other", "Machine Learning"],
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
   "type": "module",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -82,25 +87,33 @@
             "media": {
               "markdown": "docs/walkthrough/add-endpoint.md"
             },
-            "completionEvents": ["onSettingChanged:aiNormalizer.endpoints"]
+            "completionEvents": [
+              "onSettingChanged:aiNormalizer.endpoints"
+            ]
           },
           {
             "id": "setApiKey",
             "title": "Store your API key",
             "description": "Keys are saved in VS Code Secret Storage — never in settings JSON.\n\n[Set endpoint API key](command:aiNormalizer.setEndpointApiKey)",
-            "completionEvents": ["onCommand:aiNormalizer.setEndpointApiKey"]
+            "completionEvents": [
+              "onCommand:aiNormalizer.setEndpointApiKey"
+            ]
           },
           {
             "id": "refreshAndSync",
             "title": "Discover and sync models",
             "description": "Refresh the catalog from upstream, then write `chatLanguageModels.json` for the model picker.\n\n[Refresh model catalog](command:aiNormalizer.refreshModels)\n\n[Sync language models](command:aiNormalizer.syncLanguageModels)",
-            "completionEvents": ["onCommand:aiNormalizer.syncLanguageModels"]
+            "completionEvents": [
+              "onCommand:aiNormalizer.syncLanguageModels"
+            ]
           },
           {
             "id": "useInChat",
             "title": "Pick a model in Chat",
             "description": "Reload the window if models do not appear, then choose **AI Normalizer** in the chat model picker. If prompted for a BYOK secret, use `local` unless your org requires another value.\n\n[Open Copilot Chat](command:workbench.action.chat.open)",
-            "completionEvents": ["onCommand:workbench.action.chat.open"]
+            "completionEvents": [
+              "onCommand:workbench.action.chat.open"
+            ]
           }
         ]
       }
@@ -155,11 +168,21 @@
           "additionalProperties": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "toolCalling": { "type": "boolean" },
-              "vision": { "type": "boolean" },
-              "maxInputTokens": { "type": "number" },
-              "maxOutputTokens": { "type": "number" }
+              "name": {
+                "type": "string"
+              },
+              "toolCalling": {
+                "type": "boolean"
+              },
+              "vision": {
+                "type": "boolean"
+              },
+              "maxInputTokens": {
+                "type": "number"
+              },
+              "maxOutputTokens": {
+                "type": "number"
+              }
             }
           }
         },
@@ -170,9 +193,15 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string" },
-              "displayName": { "type": "string" },
-              "upstreamUrl": { "type": "string" },
+              "id": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "upstreamUrl": {
+                "type": "string"
+              },
               "adapter": {
                 "type": "string",
                 "enum": [
@@ -181,15 +210,27 @@
                   "json-tools-in-text"
                 ]
               },
-              "adapterProfile": { "type": "string" },
-              "apiKeySecretId": { "type": "string" },
+              "adapterProfile": {
+                "type": "string"
+              },
+              "apiKeySecretId": {
+                "type": "string"
+              },
               "discoverModels": {
                 "type": "object",
                 "properties": {
-                  "enabled": { "type": "boolean" },
-                  "modelsUrl": { "type": "string" },
-                  "refreshOnActivate": { "type": "boolean" },
-                  "ttlMinutes": { "type": "number" }
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "modelsUrl": {
+                    "type": "string"
+                  },
+                  "refreshOnActivate": {
+                    "type": "boolean"
+                  },
+                  "ttlMinutes": {
+                    "type": "number"
+                  }
                 }
               },
               "models": {
@@ -198,12 +239,24 @@
                 "items": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "toolCalling": { "type": "boolean" },
-                    "vision": { "type": "boolean" },
-                    "maxInputTokens": { "type": "number" },
-                    "maxOutputTokens": { "type": "number" }
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "toolCalling": {
+                      "type": "boolean"
+                    },
+                    "vision": {
+                      "type": "boolean"
+                    },
+                    "maxInputTokens": {
+                      "type": "number"
+                    },
+                    "maxOutputTokens": {
+                      "type": "number"
+                    }
                   }
                 }
               }
@@ -216,26 +269,42 @@
             {
               "id": "chatLanguageModels",
               "enabled": true,
-              "options": { "providerName": "AI Normalizer" }
+              "options": {
+                "providerName": "AI Normalizer"
+              }
             }
           ],
           "description": "Enabled sync targets",
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string" },
-              "enabled": { "type": "boolean" },
-              "options": { "type": "object" }
+              "id": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "object"
+              }
             }
           }
         },
         "aiNormalizer.inlineCompletion": {
           "type": "object",
-          "default": { "enabled": false },
+          "default": {
+            "enabled": false
+          },
           "properties": {
-            "enabled": { "type": "boolean" },
-            "endpointId": { "type": "string" },
-            "modelId": { "type": "string" },
+            "enabled": {
+              "type": "boolean"
+            },
+            "endpointId": {
+              "type": "string"
+            },
+            "modelId": {
+              "type": "string"
+            },
             "completionsPath": {
               "type": "string",
               "default": "/v1/completions"
@@ -263,5 +332,5 @@
     "tsx": "^4.19.0",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@11.5.0"
 }
