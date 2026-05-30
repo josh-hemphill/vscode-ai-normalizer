@@ -60,7 +60,7 @@ pnpm run build
 
 Press **F5** to launch an Extension Development Host (`.vscode` preLaunch runs `pnpm run build`, which compiles TypeScript and builds `bin/normalizer-proxy`). Or package a VSIX with `pnpm run build` then `npx @vscode/vsce package` — see [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
-**End users:** Install from the [Marketplace](https://marketplace.visualstudio.com/) (enable **Pre-release** until stable) or install the VSIX from [GitHub Releases](https://github.com/josh-hemphill/vscode-ai-normalizer/releases). Configure endpoints below, run **AI Normalizer: Sync Language Models**, reload the window if models do not appear. The extension ships `bin/normalizer-proxy` (platform-specific); override with `aiNormalizer.proxyBinaryPath` if needed.
+**End users:** Install [**AI Endpoint Normalizer**](https://marketplace.visualstudio.com/items?itemName=jo-hemphill.ai-endpoint-normalizer) from the Marketplace (enable **Pre-release** until stable) or install the VSIX from [GitHub Releases](https://github.com/josh-hemphill/vscode-ai-normalizer/releases). Configure endpoints below, run **AI Normalizer: Sync Language Models**, reload the window if models do not appear. The extension ships `bin/normalizer-proxy` (platform-specific); override with `aiNormalizer.proxyBinaryPath` if needed.
 
 **Questions & bugs:** [GitHub Issues](https://github.com/josh-hemphill/vscode-ai-normalizer/issues)
 

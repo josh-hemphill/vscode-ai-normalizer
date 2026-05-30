@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
 ### Changed
+
+- Marketplace extension ID renamed to `jo-hemphill.ai-endpoint-normalizer` (display name: AI Endpoint Normalizer)
+
+### Added
 
 ### Fixed
 

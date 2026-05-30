@@ -1,6 +1,6 @@
 {
-  "name": "vscode-ai-normalizer",
-  "displayName": "AI Normalizer",
+  "name": "ai-endpoint-normalizer",
+  "displayName": "AI Endpoint Normalizer",
   "description": "Normalize custom AI endpoints for Copilot BYOK: local OpenAI proxy, XML tool translation, auto model discovery, and chatLanguageModels.json sync.",
   "version": "0.1.0",
   "publisher": "jo-hemphill",
@@ -97,7 +97,7 @@
           {
             "id": "addEndpoint",
             "title": "Add your first endpoint",
-            "description": "Use a built-in template (Gemini, OpenRouter) or paste a custom OpenAI-compatible chat URL.\n\n[Add first endpoint](command:aiNormalizer.addFirstEndpoint)\n\n[Open extension settings](command:workbench.action.openSettings?%5B%22@ext:jo-hemphill.vscode-ai-normalizer%22%5D)",
+            "description": "Use a built-in template (Gemini, OpenRouter) or paste a custom OpenAI-compatible chat URL.\n\n[Add first endpoint](command:aiNormalizer.addFirstEndpoint)\n\n[Open extension settings](command:workbench.action.openSettings?%5B%22@ext:jo-hemphill.ai-endpoint-normalizer%22%5D)",
             "media": {
               "markdown": "docs/walkthrough/add-endpoint.md"
             },

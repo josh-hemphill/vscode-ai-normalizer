@@ -1,6 +1,6 @@
 # Publishing
 
-Extensions are published to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/) under publisher **jo-hemphill**.
+Extensions are published to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=jo-hemphill.ai-endpoint-normalizer) as **jo-hemphill.ai-endpoint-normalizer** (display name: AI Normalizer).
 
 ## Pre-release policy
 
@@ -30,7 +30,7 @@ Until the first stable release, CI builds and marketplace uploads use **`--pre-r
 5. **Publish to Marketplace** (manual until `VSCE_PAT` is wired in CI):
 
    ```bash
-   npx @vscode/vsce publish -i vscode-ai-normalizer.vsix -p "$VSCE_PAT" --pre-release
+   npx @vscode/vsce publish -i ai-endpoint-normalizer.vsix -p "$VSCE_PAT" --pre-release
    ```
 
 ## Local VSIX smoke
@@ -40,7 +40,7 @@ Until the first stable release, CI builds and marketplace uploads use **`--pre-r
 ```bash
 pnpm run build
 # Or: node scripts/layout-release-binaries.mjs artifacts  (after CI artifacts)
-npx @vscode/vsce package --pre-release --out vscode-ai-normalizer.vsix
+npx @vscode/vsce package --pre-release --out ai-endpoint-normalizer.vsix
 npx @vscode/vsce ls
 ```
 

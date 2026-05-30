@@ -104,15 +104,15 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
       - run: npm install -g @vscode/vsce
       - run: vsce ls
-      - run: vsce package --pre-release --out vscode-ai-normalizer.vsix
+      - run: vsce package --pre-release --out ai-endpoint-normalizer.vsix
       - uses: actions/upload-artifact@v7
         with:
           name: vsix
-          path: vscode-ai-normalizer.vsix
+          path: ai-endpoint-normalizer.vsix
       - name: GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          files: vscode-ai-normalizer.vsix
+          files: ai-endpoint-normalizer.vsix
           body: ${{ steps.changelog.outputs.body }}
           generate_release_notes: false
           prerelease: true

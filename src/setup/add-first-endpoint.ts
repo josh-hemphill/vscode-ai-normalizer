@@ -95,14 +95,14 @@ export const runAddFirstEndpoint = async (
   } else if (pick === "Open Settings") {
     await vscode.commands.executeCommand(
       "workbench.action.openSettings",
-      "@ext:jo-hemphill.vscode-ai-normalizer"
+      "@ext:jo-hemphill.ai-endpoint-normalizer"
     );
   }
 
   return true;
 };
 
-export const WALKTHROUGH_ID = "jo-hemphill.vscode-ai-normalizer#gettingStarted";
+export const WALKTHROUGH_ID = "jo-hemphill.ai-endpoint-normalizer#gettingStarted";
 
 /** Opens the built-in Getting Started walkthrough. */
 export const openGettingStartedWalkthrough = async (): Promise<void> => {
