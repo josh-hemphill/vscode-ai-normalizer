@@ -35,12 +35,16 @@ Until the first stable release, CI builds and marketplace uploads use **`--pre-r
 
 ## Local VSIX smoke
 
+`vscode:prepublish` runs **esbuild only** (no Rust). Build or lay out proxy binaries before packaging:
+
 ```bash
 pnpm run build
-# Or use release artifact layout — see docs/TESTING.md
+# Or: node scripts/layout-release-binaries.mjs artifacts  (after CI artifacts)
 npx @vscode/vsce package --pre-release --out vscode-ai-normalizer.vsix
 npx @vscode/vsce ls
 ```
+
+Release CI lays out `bin/<platform>-<arch>/` from matrix artifacts; `vsce package` does not run `cargo build`.
 
 Confirm `bin/**/normalizer-proxy*`, `dist/extension.js`, and `CHANGELOG.md` are included; `src/`, `target/`, and `crates/` are not.
 

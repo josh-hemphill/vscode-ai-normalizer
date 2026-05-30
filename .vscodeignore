@@ -24,6 +24,9 @@ tsconfig.json
 **/*.pdb
 **/*.d
 .github/**
+artifacts/**
+bin/normalizer-proxy
+bin/normalizer-proxy.exe
 docs/PUBLISHING.md
 docs/TESTING.md
 !CHANGELOG.md

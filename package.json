@@ -329,7 +329,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run build",
+    "vscode:prepublish": "pnpm run compile",
     "compile": "node scripts/build-extension.mjs",
     "watch": "node scripts/build-extension.mjs --watch",
     "lint": "tsc -p . --noEmit",
