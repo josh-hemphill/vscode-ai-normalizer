@@ -1,0 +1,43 @@
+name: Release prep
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver version (e.g. 0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Run release prep
+        run: node scripts/release-prep.mjs "${{ inputs.version }}"
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(release): prepare v${{ inputs.version }}"
+          branch: "release/v${{ inputs.version }}"
+          title: "Release prep: v${{ inputs.version }}"
+          body: |
+            Automated release preparation.
+
+            - Bumped `package.json` to **${{ inputs.version }}**
+            - Finalized `CHANGELOG.md` from `[Unreleased]` and commits since the last tag
+
+            **Next steps (maintainer):**
+            1. Review changelog and version
+            2. Merge this PR
+            3. `git tag v${{ inputs.version }} && git push origin v${{ inputs.version }}`
+            4. CI will attach a **pre-release** VSIX and GitHub release notes from the changelog

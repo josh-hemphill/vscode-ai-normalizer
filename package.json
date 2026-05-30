@@ -21,6 +21,20 @@
     "Other",
     "Machine Learning"
   ],
+  "keywords": [
+    "copilot",
+    "byok",
+    "bring your own key",
+    "openai",
+    "gemini",
+    "language models",
+    "chat",
+    "proxy",
+    "tools",
+    "xml",
+    "cursor"
+  ],
+  "qna": "https://github.com/josh-hemphill/vscode-ai-normalizer/issues/new",
   "type": "module",
   "activationEvents": [
     "onStartupFinished"
@@ -320,7 +334,9 @@
     "watch": "node scripts/build-extension.mjs --watch",
     "lint": "tsc -p . --noEmit",
     "test": "cargo test -p normalizer-proxy && pnpm run test:ts && pnpm run test:integration",
-    "test:ts": "tsx --test src/**/*.test.ts",
+    "test:ts": "tsx --test src/**/*.test.ts scripts/**/*.test.mjs",
+    "release:prep": "node scripts/release-prep.mjs",
+    "release:notes": "node scripts/extract-changelog-section.mjs",
     "test:integration": "node scripts/integration-proxy.mjs",
     "build:proxy": "cargo build --release -p normalizer-proxy && node scripts/copy-proxy.mjs",
     "build": "pnpm run build:proxy && pnpm run compile"

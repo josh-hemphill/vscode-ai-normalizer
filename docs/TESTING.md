@@ -132,8 +132,8 @@ A second host with an empty local cache (no API keys in that profile) must **att
 
 ## VSIX smoke (pre-publish)
 
-1. `pnpm run build` then `npx @vscode/vsce package`.
-2. `npx @vscode/vsce ls` — must include `bin/**/normalizer-proxy*` and `dist/`, must **not** include `target/` or `src/`.
+1. `pnpm run build` then `npx @vscode/vsce package --pre-release`.
+2. `npx @vscode/vsce ls` — must include `bin/**/normalizer-proxy*`, `dist/extension.js`, and `CHANGELOG.md`; must **not** include `target/` or `src/`.
 3. Install VSIX in a clean profile (no local `target/` folder).
 4. Start Proxy → `http://127.0.0.1:3847/health` OK → Sync Language Models → reload → model picker.
 

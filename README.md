@@ -60,7 +60,9 @@ pnpm run build
 
 Press **F5** to launch an Extension Development Host (`.vscode` preLaunch runs `pnpm run build`, which compiles TypeScript and builds `bin/normalizer-proxy`). Or package a VSIX with `pnpm run build` then `npx @vscode/vsce package` — see [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
-**End users:** Install from the marketplace (when published), configure endpoints below, run **AI Normalizer: Sync Language Models**, reload the window if models do not appear. The extension ships `bin/normalizer-proxy` (platform-specific); override with `aiNormalizer.proxyBinaryPath` if needed.
+**End users:** Install from the [Marketplace](https://marketplace.visualstudio.com/) (enable **Pre-release** until stable) or install the VSIX from [GitHub Releases](https://github.com/josh-hemphill/vscode-ai-normalizer/releases). Configure endpoints below, run **AI Normalizer: Sync Language Models**, reload the window if models do not appear. The extension ships `bin/normalizer-proxy` (platform-specific); override with `aiNormalizer.proxyBinaryPath` if needed.
+
+**Questions & bugs:** [GitHub Issues](https://github.com/josh-hemphill/vscode-ai-normalizer/issues)
 
 ---
 
@@ -519,13 +521,21 @@ pnpm run test:integration
 ```
 
 Manual pre-publish checklist (Copilot BYOK, multi-window): [docs/TESTING.md](docs/TESTING.md).  
-Publication roadmap: [docs/PUBLISHING.md](docs/PUBLISHING.md).
+Releases and Marketplace upload: [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
-### Security
+## Security
 
-- The extension runs a **localhost** proxy (`127.0.0.1` by default) and ships a **native binary** in `bin/`.
-- Upstream API keys live in VS Code **SecretStorage** only; they are not written to settings or `chatLanguageModels.json`.
-- Review proxy logs in the **AI Normalizer** output channel; do not expose the proxy port beyond your machine.
+AI Normalizer runs a **local native proxy** and handles **upstream API keys**. Please read [SECURITY.md](SECURITY.md) before installing in sensitive environments.
+
+| Topic | Behavior |
+|-------|----------|
+| Network | Proxy binds to **loopback** by default (`aiNormalizer.proxyPort`, default `3847`). Do not forward this port to untrusted networks. |
+| API keys | Stored in VS Code **SecretStorage** only — never in `settings.json` or synced `chatLanguageModels.json`. |
+| Synced file | Updates `chatLanguageModels.json` with model metadata and `${input:chat.lm.secret.*}` placeholders, not raw keys. |
+| Binaries | `normalizer-proxy` is built from this repo; release VSIXes are produced by [CI](.github/workflows/release.yml). |
+| Reporting | Vulnerabilities: [GitHub Security Advisories](https://github.com/josh-hemphill/vscode-ai-normalizer/security/advisories/new) (see [SECURITY.md](SECURITY.md)). |
+
+Review the **AI Normalizer** output channel when debugging; treat upstream keys like production credentials.
 
 ## License
 
