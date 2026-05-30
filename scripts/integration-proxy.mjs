@@ -1,5 +1,11 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  writeFileSync,
+  rmSync,
+  readdirSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,10 +22,31 @@ const binaryCandidates = [
   join(root, "target", "debug", exe),
 ];
 
-const binary = binaryCandidates.find((p) => existsSync(p));
+const findBinary = () => {
+  const direct = binaryCandidates.find((p) => existsSync(p));
+  if (direct) {
+    return direct;
+  }
+  const binRoot = join(root, "bin");
+  if (!existsSync(binRoot)) {
+    return undefined;
+  }
+  for (const dir of readdirSync(binRoot)) {
+    const candidate = join(binRoot, dir, exe);
+    if (existsSync(candidate)) {
+      console.warn(
+        `integration-proxy: using ${candidate} (no exact match for ${platformArch})`
+      );
+      return candidate;
+    }
+  }
+  return undefined;
+};
+
+const binary = findBinary();
 if (!binary) {
   console.error(
-    "integration-proxy: no binary found; run cargo build -p normalizer-proxy"
+    `integration-proxy: no binary found for ${platformArch}; run cargo build -p normalizer-proxy or layout-release-binaries`
   );
   process.exit(1);
 }
