@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-test/
+out/
+*.vsix
+target/
+crates/normalizer-proxy/target/
+.env
+.DS_Store
+bin/

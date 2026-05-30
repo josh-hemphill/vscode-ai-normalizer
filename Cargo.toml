@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/normalizer-proxy"]
+resolver = "2"

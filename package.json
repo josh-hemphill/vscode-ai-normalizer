@@ -1,0 +1,267 @@
+{
+  "name": "vscode-ai-normalizer",
+  "displayName": "AI Normalizer",
+  "description": "Normalize custom AI endpoints for Copilot BYOK: local OpenAI proxy, XML tool translation, auto model discovery, and chatLanguageModels.json sync.",
+  "version": "0.1.0",
+  "publisher": "jo-hemphill",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josh-hemphill/vscode-ai-normalizer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/josh-hemphill/vscode-ai-normalizer/issues"
+  },
+  "homepage": "https://github.com/josh-hemphill/vscode-ai-normalizer#readme",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": ["Other", "Machine Learning"],
+  "type": "module",
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiNormalizer.startProxy",
+        "title": "AI Normalizer: Start Proxy"
+      },
+      {
+        "command": "aiNormalizer.stopProxy",
+        "title": "AI Normalizer: Stop Proxy"
+      },
+      {
+        "command": "aiNormalizer.syncLanguageModels",
+        "title": "AI Normalizer: Sync Language Models"
+      },
+      {
+        "command": "aiNormalizer.reloadProxy",
+        "title": "AI Normalizer: Reload Proxy Config"
+      },
+      {
+        "command": "aiNormalizer.exportProfile",
+        "title": "AI Normalizer: Export Active Profile"
+      },
+      {
+        "command": "aiNormalizer.setInlineChatModel",
+        "title": "AI Normalizer: Set Inline Chat Default Model"
+      },
+      {
+        "command": "aiNormalizer.refreshModels",
+        "title": "AI Normalizer: Refresh Model Catalog"
+      },
+      {
+        "command": "aiNormalizer.setEndpointApiKey",
+        "title": "AI Normalizer: Set Endpoint API Key"
+      },
+      {
+        "command": "aiNormalizer.clearEndpointApiKey",
+        "title": "AI Normalizer: Clear Endpoint API Key"
+      },
+      {
+        "command": "aiNormalizer.addFirstEndpoint",
+        "title": "AI Normalizer: Add First Endpoint"
+      },
+      {
+        "command": "aiNormalizer.openGettingStarted",
+        "title": "AI Normalizer: Getting Started",
+        "category": "AI Normalizer"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "Get started with AI Normalizer",
+        "description": "Connect an upstream API, store your key securely, and sync models into Copilot Chat.",
+        "steps": [
+          {
+            "id": "addEndpoint",
+            "title": "Add your first endpoint",
+            "description": "Use a built-in template (Gemini, OpenRouter) or paste a custom OpenAI-compatible chat URL.\n\n[Add first endpoint](command:aiNormalizer.addFirstEndpoint)\n\n[Open extension settings](command:workbench.action.openSettings?%5B%22@ext:jo-hemphill.vscode-ai-normalizer%22%5D)",
+            "media": {
+              "markdown": "docs/walkthrough/add-endpoint.md"
+            },
+            "completionEvents": ["onSettingChanged:aiNormalizer.endpoints"]
+          },
+          {
+            "id": "setApiKey",
+            "title": "Store your API key",
+            "description": "Keys are saved in VS Code Secret Storage — never in settings JSON.\n\n[Set endpoint API key](command:aiNormalizer.setEndpointApiKey)",
+            "completionEvents": ["onCommand:aiNormalizer.setEndpointApiKey"]
+          },
+          {
+            "id": "refreshAndSync",
+            "title": "Discover and sync models",
+            "description": "Refresh the catalog from upstream, then write `chatLanguageModels.json` for the model picker.\n\n[Refresh model catalog](command:aiNormalizer.refreshModels)\n\n[Sync language models](command:aiNormalizer.syncLanguageModels)",
+            "completionEvents": ["onCommand:aiNormalizer.syncLanguageModels"]
+          },
+          {
+            "id": "useInChat",
+            "title": "Pick a model in Chat",
+            "description": "Reload the window if models do not appear, then choose **AI Normalizer** in the chat model picker. If prompted for a BYOK secret, use `local` unless your org requires another value.\n\n[Open Copilot Chat](command:workbench.action.chat.open)",
+            "completionEvents": ["onCommand:workbench.action.chat.open"]
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "AI Normalizer",
+      "properties": {
+        "aiNormalizer.proxyPort": {
+          "type": "number",
+          "default": 3847,
+          "description": "Local proxy listen port"
+        },
+        "aiNormalizer.autoStartProxy": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start proxy when the extension activates"
+        },
+        "aiNormalizer.autoSyncOnActivate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run enabled sync targets after proxy is healthy"
+        },
+        "aiNormalizer.proxyBinaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to normalizer-proxy binary (empty = auto-detect from build output)"
+        },
+        "aiNormalizer.profilesPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional JSON file with named toolFormatProfile overrides"
+        },
+        "aiNormalizer.profiles": {
+          "type": "object",
+          "default": {},
+          "description": "Named profiles (toolFormatProfile, capabilityDefaults)"
+        },
+        "aiNormalizer.modelCachePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to discovered-models cache JSON (empty = extension global storage)"
+        },
+        "aiNormalizer.copilotByokSecretId": {
+          "type": "string",
+          "default": "aiNormalizer",
+          "description": "chat.lm.secret id for Copilot BYOK placeholder in chatLanguageModels.json"
+        },
+        "aiNormalizer.modelOverrides": {
+          "type": "object",
+          "default": {},
+          "description": "Per-model overrides keyed as endpointId/modelId",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "toolCalling": { "type": "boolean" },
+              "vision": { "type": "boolean" },
+              "maxInputTokens": { "type": "number" },
+              "maxOutputTokens": { "type": "number" }
+            }
+          }
+        },
+        "aiNormalizer.endpoints": {
+          "type": "array",
+          "default": [],
+          "description": "Upstream endpoints and adapter configuration",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "displayName": { "type": "string" },
+              "upstreamUrl": { "type": "string" },
+              "adapter": {
+                "type": "string",
+                "enum": [
+                  "openai-pass-through",
+                  "inline-xml-tools",
+                  "json-tools-in-text"
+                ]
+              },
+              "adapterProfile": { "type": "string" },
+              "apiKeySecretId": { "type": "string" },
+              "discoverModels": {
+                "type": "object",
+                "properties": {
+                  "enabled": { "type": "boolean" },
+                  "modelsUrl": { "type": "string" },
+                  "refreshOnActivate": { "type": "boolean" },
+                  "ttlMinutes": { "type": "number" }
+                }
+              },
+              "models": {
+                "type": "array",
+                "description": "Optional manual model list; merged with discovered catalog",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "toolCalling": { "type": "boolean" },
+                    "vision": { "type": "boolean" },
+                    "maxInputTokens": { "type": "number" },
+                    "maxOutputTokens": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "aiNormalizer.syncTargets": {
+          "type": "array",
+          "default": [
+            {
+              "id": "chatLanguageModels",
+              "enabled": true,
+              "options": { "providerName": "AI Normalizer" }
+            }
+          ],
+          "description": "Enabled sync targets",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "enabled": { "type": "boolean" },
+              "options": { "type": "object" }
+            }
+          }
+        },
+        "aiNormalizer.inlineCompletion": {
+          "type": "object",
+          "default": { "enabled": false },
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpointId": { "type": "string" },
+            "modelId": { "type": "string" },
+            "completionsPath": {
+              "type": "string",
+              "default": "/v1/completions"
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run build",
+    "compile": "node scripts/build-extension.mjs",
+    "watch": "node scripts/build-extension.mjs --watch",
+    "lint": "tsc -p . --noEmit",
+    "test": "cargo test -p normalizer-proxy && pnpm run test:ts && pnpm run test:integration",
+    "test:ts": "tsx --test src/**/*.test.ts",
+    "test:integration": "node scripts/integration-proxy.mjs",
+    "build:proxy": "cargo build --release -p normalizer-proxy && node scripts/copy-proxy.mjs",
+    "build": "pnpm run build:proxy && pnpm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.96.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

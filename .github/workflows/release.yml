@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-proxy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: win32
+            arch: x64
+            ext: .exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            platform: darwin
+            arch: x64
+            ext: ""
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            platform: darwin
+            arch: arm64
+            ext: ""
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+            arch: x64
+            ext: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release -p normalizer-proxy --target ${{ matrix.target }}
+      - run: mkdir -p dist-bin/${{ matrix.platform }}-${{ matrix.arch }}
+      - name: Copy binary
+        shell: bash
+        run: |
+          SRC="target/${{ matrix.target }}/release/normalizer-proxy${{ matrix.ext }}"
+          DEST="dist-bin/${{ matrix.platform }}-${{ matrix.arch }}/normalizer-proxy${{ matrix.ext }}"
+          cp "$SRC" "$DEST"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proxy-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist-bin/${{ matrix.platform }}-${{ matrix.arch }}
+
+  package-vsix:
+    needs: build-proxy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release -p normalizer-proxy
+      - name: Download all proxy binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: proxy-*
+          merge-multiple: true
+      - name: Layout bin/
+        run: node scripts/layout-release-binaries.mjs artifacts
+      - run: pnpm install
+      - run: pnpm run compile
+      - run: pnpm run lint
+      - run: pnpm run test:ts
+      - run: node scripts/integration-proxy.mjs
+      - run: npm install -g @vscode/vsce
+      - run: vsce package --out vscode-ai-normalizer.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: vscode-ai-normalizer.vsix
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: vscode-ai-normalizer.vsix
+          generate_release_notes: true

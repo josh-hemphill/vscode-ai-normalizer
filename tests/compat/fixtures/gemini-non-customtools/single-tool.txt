@@ -1,0 +1,3 @@
+Hello <tool_use> name="get_weather" id="call_1">
+{"location":"Tokyo"}
+</tool_use> done
