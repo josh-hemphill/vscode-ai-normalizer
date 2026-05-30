@@ -28,7 +28,7 @@ const walk = (dir) => {
     const destDir = join(root, "bin", platformArch);
     mkdirSync(destDir, { recursive: true });
     const dest = join(destDir, name);
-    cpSync(full, dest, { mode: statSync(full).mode });
+    cpSync(full, dest);
     copied += 1;
     console.log(`layout-release-binaries: ${dest}`);
   }
