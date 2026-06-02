@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
 ### Changed
 
-- Marketplace extension ID renamed to `jo-hemphill.ai-endpoint-normalizer` (display name: AI Endpoint Normalizer)
+### Fixed
+
+### Security
+
+## [0.1.1] - 2026-06-02
 
 ### Added
 
@@ -17,11 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `additionalSystemPrompts` on `aiNormalizer.profiles` for `inline-xml-tools` endpoints
 - `chat-only` built-in profile and `toolsPolicy` endpoint mode (`forward` / `strip`) for tool-blocked upstreams
 - `modelOverrides` passthrough of extra model fields (for example `thinking`, `streaming`) into synced `chatLanguageModels.json`
+- several new options and profiles
 
-### Fixed
+### Changed
 
-### Security
-
+- Marketplace extension ID renamed to `jo-hemphill.ai-endpoint-normalizer` (display name: AI Endpoint Normalizer)
 ## [0.1.0] - 2026-05-29
 
 ### Added
@@ -40,3 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upstream API keys stored in VS Code SecretStorage only
 - Synced models use `chat.lm.secret.*` placeholders, not literal keys
 - Localhost-only proxy by default (`127.0.0.1`)
+

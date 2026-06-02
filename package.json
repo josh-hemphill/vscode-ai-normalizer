@@ -2,7 +2,7 @@
   "name": "ai-endpoint-normalizer",
   "displayName": "AI Endpoint Normalizer",
   "description": "Normalize custom AI endpoints for Copilot BYOK: local OpenAI proxy, XML tool translation, auto model discovery, and chatLanguageModels.json sync.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "jo-hemphill",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -169,7 +169,9 @@
             "properties": {
               "additionalSystemPrompts": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "Extra system messages injected after the tools preamble (inline-xml-tools only)"
               }
             }
@@ -246,7 +248,10 @@
               },
               "toolsPolicy": {
                 "type": "string",
-                "enum": ["forward", "strip"],
+                "enum": [
+                  "forward",
+                  "strip"
+                ],
                 "description": "forward = normal behavior. strip = drop tool payload fields before forwarding (recommended for tool-blocked endpoints)"
               },
               "adapterProfile": {
