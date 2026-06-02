@@ -101,6 +101,9 @@ pub struct NamedProfile {
     pub tool_format_profile: ToolFormatProfile,
     #[serde(default)]
     pub capability_defaults: CapabilityDefaults,
+    /// Extra system messages for inline-xml-tools (after tools preamble, before client messages).
+    #[serde(default)]
+    pub additional_system_prompts: Vec<String>,
 }
 
 pub fn builtin_profiles() -> HashMap<String, NamedProfile> {
@@ -110,9 +113,26 @@ pub fn builtin_profiles() -> HashMap<String, NamedProfile> {
         NamedProfile {
             tool_format_profile: ToolFormatProfile::default(),
             capability_defaults: CapabilityDefaults::default(),
+            additional_system_prompts: Vec::new(),
         },
     );
     map
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserializes_additional_system_prompts() {
+        let json = r#"{
+            "toolFormatProfile": {},
+            "additionalSystemPrompts": ["Line one", "Line two"]
+        }"#;
+        let profile: NamedProfile = serde_json::from_str(json).expect("parse");
+        assert_eq!(profile.additional_system_prompts.len(), 2);
+        assert_eq!(profile.additional_system_prompts[0], "Line one");
+    }
 }
 
 pub fn merge_profiles(

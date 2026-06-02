@@ -1,53 +1,92 @@
 # Publishing
 
-Extensions are published to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=jo-hemphill.ai-endpoint-normalizer) as **jo-hemphill.ai-endpoint-normalizer** (display name: AI Normalizer).
+Extension ID: **[jo-hemphill.ai-endpoint-normalizer](https://marketplace.visualstudio.com/items?itemName=jo-hemphill.ai-endpoint-normalizer)** (display name: **AI Endpoint Normalizer**).
+
+Also published to [Open VSX](https://open-vsx.org/) for VSCodium and other clients that use that registry.
 
 ## Pre-release policy
 
-Until the first stable release, CI builds and marketplace uploads use **`--pre-release`**. Install from the marketplace with **Pre-release** enabled, or install the VSIX from GitHub Releases.
+CI publishes with **`--pre-release`** until you remove that flag for a stable release. In VS Code/Cursor, enable **Pre-release** when installing from the Marketplace.
+
+## GitHub Actions secrets
+
+| Secret | Required | Purpose |
+|--------|----------|---------|
+| `VSCE_PAT` | Yes (for Marketplace publish) | Azure DevOps PAT with **Marketplace → Manage** |
+| `OVSX_PAT` | Yes (for Open VSX publish) | Token from [open-vsx.org](https://open-vsx.org) user settings |
+| `VSIX_SIGNING_PFX_BASE64` | No | Base64-encoded code-signing `.pfx` |
+| `VSIX_SIGNING_PFX_PASSWORD` | No | PFX password (required when PFX secret is set) |
+
+### First-time Open VSX
+
+```bash
+npx ovsx create-namespace jo-hemphill -p "$OVSX_PAT"
+```
+
+### Optional: VSIX signing
+
+Marketplace accepts **unsigned** extensions. Signing requires a commercial code-signing certificate exported as PFX.
+
+1. Encode the certificate: `base64 -w0 signing.pfx` (Linux) or equivalent
+2. Add secrets `VSIX_SIGNING_PFX_BASE64` and `VSIX_SIGNING_PFX_PASSWORD`
+3. CI uses [`scripts/sign-extension-manifest.sh`](../scripts/sign-extension-manifest.sh) as `vsce publish --signTool` (manifest → `.p7s` via OpenSSL)
+4. Verify locally after first setup: `vsce verify-signature -i ai-endpoint-normalizer.vsix -m … -s …`
+
+If signing secrets are absent, [`scripts/publish-marketplace.sh`](../scripts/publish-marketplace.sh) publishes **unsigned**.
+
+**Alternative:** [Azure Trusted Signing](https://devblogs.microsoft.com/visualstudio/sign-vsix-packages-with-sign-cli/) (not wired in CI yet).
+
+### GitHub environment `marketplace`
+
+The `publish-registries` job uses environment **`marketplace`**. In repo **Settings → Environments**, create it and optionally require reviewers before publish runs.
 
 ## Release flow
 
-1. **Prepare** (bumps `package.json`, finalizes `CHANGELOG.md` from `[Unreleased]` + commits since last tag):
+1. **Prepare** — bumps `package.json`, finalizes `CHANGELOG.md`:
 
    ```bash
-   pnpm run release:prep -- 0.2.0
+   pnpm run release:prep 0.2.0
    ```
 
-   Or run the **Release prep** GitHub Actions workflow (`workflow_dispatch`) with the same version.
+   Or **Actions → Release prep** (`workflow_dispatch`).
 
-2. **Review** the PR/commit: changelog section, version, tests green.
+2. **Review** changelog and version; merge.
 
-3. **Tag and push**:
+3. **Tag and push:**
 
    ```bash
    git tag v0.2.0
    git push origin v0.2.0
    ```
 
-4. **CI** (`.github/workflows/release.yml`) builds cross-platform `bin/`, packages a pre-release VSIX, and creates a GitHub Release whose **body** is the matching `CHANGELOG.md` section (not auto-generated commit notes).
+4. **CI** ([`.github/workflows/release.yml`](../.github/workflows/release.yml)):
+   - Builds cross-platform `bin/<platform>-<arch>/`
+   - Packages `ai-endpoint-normalizer.vsix` (pre-release)
+   - GitHub Release with changelog body
+   - **`publish-registries`:** Marketplace (+ optional signing) and Open VSX
 
-5. **Publish to Marketplace** (manual until `VSCE_PAT` is wired in CI):
-
-   ```bash
-   npx @vscode/vsce publish -i ai-endpoint-normalizer.vsix -p "$VSCE_PAT" --pre-release
-   ```
-
-## Local VSIX smoke
-
-`vscode:prepublish` runs **esbuild only** (no Rust). Build or lay out proxy binaries before packaging:
+## Manual publish (fallback)
 
 ```bash
 pnpm run build
-# Or: node scripts/layout-release-binaries.mjs artifacts  (after CI artifacts)
+npx @vscode/vsce package --pre-release --out ai-endpoint-normalizer.vsix
+export VSCE_PAT=…
+bash scripts/publish-marketplace.sh ai-endpoint-normalizer.vsix
+npx ovsx publish ai-endpoint-normalizer.vsix -p "$OVSX_PAT" --pre-release
+```
+
+## Local VSIX smoke
+
+`vscode:prepublish` is **compile only** (no Rust). Lay out or build binaries first:
+
+```bash
+pnpm run build
 npx @vscode/vsce package --pre-release --out ai-endpoint-normalizer.vsix
 npx @vscode/vsce ls
 ```
 
-Release CI lays out `bin/<platform>-<arch>/` from matrix artifacts; `vsce package` does not run `cargo build`.
-
-Confirm `bin/**/normalizer-proxy*`, `dist/extension.js`, and `CHANGELOG.md` are included; `src/`, `target/`, and `crates/` are not.
+Confirm `bin/<platform>-<arch>/`, `dist/extension.js`, and `CHANGELOG.md` are included.
 
 ## Cross-platform binaries
 
-The release workflow builds `win32-x64`, `darwin-x64`, `darwin-arm64`, and `linux-x64`. See [TESTING.md](TESTING.md) for multi-window and BYOK manual checks before removing `--pre-release`.
+Release matrix: `win32-x64`, `darwin-x64`, `darwin-arm64`, `linux-x64`. See [TESTING.md](TESTING.md) for manual BYOK and multi-window checks before dropping `--pre-release`.

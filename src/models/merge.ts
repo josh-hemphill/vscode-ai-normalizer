@@ -5,6 +5,7 @@ import type {
   ModelCatalogEntry,
   ModelConfig,
   NamedProfile,
+  OverrideModelConfig,
   ResolvedModel,
 } from "../config/schema.ts";
 import { BUILTIN_PROFILES } from "../config/schema.ts";
@@ -24,19 +25,41 @@ const capabilityForEndpoint = (
 
 const applyLayer = (
   base: ResolvedModel,
-  layer: Partial<ModelConfig> | undefined
+  layer: Partial<ModelConfig> | OverrideModelConfig | undefined
 ): ResolvedModel => {
   if (!layer) {
     return base;
   }
+  const {
+    id: _id,
+    endpointId: _endpointId,
+    name,
+    toolCalling,
+    vision,
+    maxInputTokens,
+    maxOutputTokens,
+    thinking,
+    streaming,
+    apiType,
+    ...extra
+  } = layer as Record<string, unknown>;
   return {
-    id: layer.id ?? base.id,
-    name: layer.name ?? base.name,
+    id: typeof _id === "string" ? _id : base.id,
+    name: typeof name === "string" ? name : base.name,
     endpointId: base.endpointId,
-    toolCalling: layer.toolCalling ?? base.toolCalling,
-    vision: layer.vision ?? base.vision,
-    maxInputTokens: layer.maxInputTokens ?? base.maxInputTokens,
-    maxOutputTokens: layer.maxOutputTokens ?? base.maxOutputTokens,
+    toolCalling:
+      typeof toolCalling === "boolean" ? toolCalling : base.toolCalling,
+    vision: typeof vision === "boolean" ? vision : base.vision,
+    maxInputTokens:
+      typeof maxInputTokens === "number" ? maxInputTokens : base.maxInputTokens,
+    maxOutputTokens:
+      typeof maxOutputTokens === "number"
+        ? maxOutputTokens
+        : base.maxOutputTokens,
+    thinking: typeof thinking === "boolean" ? thinking : base.thinking,
+    streaming: typeof streaming === "boolean" ? streaming : base.streaming,
+    apiType: typeof apiType === "string" ? apiType : base.apiType,
+    extras: { ...base.extras, ...extra },
   };
 };
 
@@ -95,6 +118,10 @@ export const mergeResolvedModels = (
         vision: cap?.vision ?? false,
         maxInputTokens: cap?.maxInputTokens ?? 128_000,
         maxOutputTokens: cap?.maxOutputTokens ?? 8_192,
+        thinking: false,
+        streaming: true,
+        apiType: "chat-completions",
+        extras: {},
       };
       resolved = applyLayer(
         resolved,
@@ -127,6 +154,10 @@ export const endpointsWithMergedModels = (
         vision: m.vision,
         maxInputTokens: m.maxInputTokens,
         maxOutputTokens: m.maxOutputTokens,
+        thinking: m.thinking,
+        streaming: m.streaming,
+        apiType: m.apiType,
+        ...m.extras,
       })),
     };
   });
@@ -145,6 +176,10 @@ export const buildCatalogFromResolved = (
       vision: m.vision,
       maxInputTokens: m.maxInputTokens,
       maxOutputTokens: m.maxOutputTokens,
+      thinking: m.thinking,
+      streaming: m.streaming,
+      apiType: m.apiType,
+      extras: m.extras,
     })
   ),
 });

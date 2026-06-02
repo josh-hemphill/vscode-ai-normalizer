@@ -163,7 +163,17 @@
         "aiNormalizer.profiles": {
           "type": "object",
           "default": {},
-          "description": "Named profiles (toolFormatProfile, capabilityDefaults)"
+          "description": "Named profiles (toolFormatProfile, capabilityDefaults, additionalSystemPrompts for inline-xml-tools)",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "additionalSystemPrompts": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Extra system messages injected after the tools preamble (inline-xml-tools only)"
+              }
+            }
+          }
         },
         "aiNormalizer.modelCachePath": {
           "type": "string",
@@ -178,7 +188,7 @@
         "aiNormalizer.modelOverrides": {
           "type": "object",
           "default": {},
-          "description": "Per-model overrides keyed as endpointId/modelId",
+          "description": "Per-model overrides keyed as endpointId/modelId; unknown keys are passed through to chatLanguageModels.json model entries",
           "additionalProperties": {
             "type": "object",
             "properties": {
@@ -196,8 +206,18 @@
               },
               "maxOutputTokens": {
                 "type": "number"
+              },
+              "thinking": {
+                "type": "boolean"
+              },
+              "streaming": {
+                "type": "boolean"
+              },
+              "apiType": {
+                "type": "string"
               }
-            }
+            },
+            "additionalProperties": true
           }
         },
         "aiNormalizer.endpoints": {
@@ -223,6 +243,11 @@
                   "inline-xml-tools",
                   "json-tools-in-text"
                 ]
+              },
+              "toolsPolicy": {
+                "type": "string",
+                "enum": ["forward", "strip"],
+                "description": "forward = normal behavior. strip = drop tool payload fields before forwarding (recommended for tool-blocked endpoints)"
               },
               "adapterProfile": {
                 "type": "string"

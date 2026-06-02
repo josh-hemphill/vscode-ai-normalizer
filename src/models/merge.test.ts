@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { emptyCache } from "./cache-store.ts";
-import { mergeResolvedModels } from "./merge.ts";
+import { endpointsWithMergedModels, mergeResolvedModels } from "./merge.ts";
 import type { AiNormalizerSettings } from "../config/schema.ts";
 import { BUILTIN_PROFILES } from "../config/schema.ts";
 
@@ -75,5 +75,31 @@ describe("mergeResolvedModels", () => {
     settings.endpoints[0].models = [{ id: "gpt-4", toolCalling: true }];
     const merged = mergeResolvedModels(settings, cache, BUILTIN_PROFILES);
     assert.equal(merged[0].toolCalling, true);
+  });
+
+  it("passes unknown override fields to extras", () => {
+    const cache = emptyCache();
+    cache.endpoints.ep1 = {
+      fetchedAt: new Date().toISOString(),
+      sourceUrl: "https://api.example.com/v1/models",
+      models: [{ id: "gpt-4" }],
+    };
+    const settings = baseSettings();
+    settings.modelOverrides["ep1/gpt-4"] = {
+      thinking: true,
+      family: "gpt",
+    };
+    const merged = mergeResolvedModels(settings, cache, BUILTIN_PROFILES);
+    assert.equal(merged[0].thinking, true);
+    assert.equal(merged[0].extras.family, "gpt");
+  });
+
+  it("preserves endpoint toolsPolicy in merged endpoints", () => {
+    const cache = emptyCache();
+    const settings = baseSettings();
+    settings.endpoints[0].toolsPolicy = "strip";
+    settings.endpoints[0].models = [{ id: "gpt-4" }];
+    const endpoints = endpointsWithMergedModels(settings, cache, BUILTIN_PROFILES);
+    assert.equal(endpoints[0].toolsPolicy, "strip");
   });
 });

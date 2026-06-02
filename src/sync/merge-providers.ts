@@ -34,13 +34,15 @@ export const mergeChatLanguageModelsProviders = (
   }
 
   const normalizedModels = catalog.models.map((m) => ({
+    ...(m.extras ?? {}),
     id: m.id,
     name: m.name,
     url: `${catalog.proxyBaseUrl}/v1/chat/completions`,
-    apiType: "chat-completions",
+    apiType: m.apiType ?? "chat-completions",
     toolCalling: m.toolCalling,
     vision: m.vision,
-    streaming: true,
+    streaming: m.streaming,
+    thinking: m.thinking,
     maxInputTokens: m.maxInputTokens,
     maxOutputTokens: m.maxOutputTokens,
   }));

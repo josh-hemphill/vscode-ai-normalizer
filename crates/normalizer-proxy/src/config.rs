@@ -22,6 +22,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_tools_policy() -> String {
+    "forward".into()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EndpointConfig {
@@ -30,6 +34,8 @@ pub struct EndpointConfig {
     pub display_name: Option<String>,
     pub upstream_url: String,
     pub adapter: String,
+    #[serde(default = "default_tools_policy")]
+    pub tools_policy: String,
     #[serde(default)]
     pub adapter_profile: Option<String>,
     #[serde(default)]
@@ -111,6 +117,7 @@ mod tests {
                     display_name: None,
                     upstream_url: "http://a/v1/chat/completions".into(),
                     adapter: "openai-pass-through".into(),
+                    tools_policy: "forward".into(),
                     adapter_profile: None,
                     api_key: None,
                     models: vec![
@@ -129,6 +136,7 @@ mod tests {
                     display_name: None,
                     upstream_url: "http://b/v1/chat/completions".into(),
                     adapter: "openai-pass-through".into(),
+                    tools_policy: "forward".into(),
                     adapter_profile: None,
                     api_key: None,
                     models: vec![
@@ -168,5 +176,22 @@ mod tests {
         let state = AppState::from_payload(payload);
         let resolved = state.resolve_model("shared-id").expect("model");
         assert_eq!(resolved.endpoint.id, "ep-b");
+    }
+
+    #[test]
+    fn endpoint_tools_policy_defaults_to_forward() {
+        let payload: ProxyConfigPayload = serde_json::from_str(
+            r#"{
+              "profiles": {},
+              "endpoints": [{
+                "id":"ep",
+                "upstreamUrl":"http://x/v1/chat/completions",
+                "adapter":"openai-pass-through",
+                "models":[{"id":"m1"}]
+              }]
+            }"#,
+        )
+        .expect("payload");
+        assert_eq!(payload.endpoints[0].tools_policy, "forward");
     }
 }

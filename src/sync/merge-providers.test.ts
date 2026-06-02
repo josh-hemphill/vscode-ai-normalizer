@@ -18,6 +18,10 @@ const catalog = (): ModelCatalog => ({
       vision: false,
       maxInputTokens: 1_000_000,
       maxOutputTokens: 8192,
+      thinking: false,
+      streaming: true,
+      apiType: "chat-completions",
+      extras: {},
     },
   ],
 });
@@ -95,5 +99,31 @@ describe("mergeChatLanguageModelsProviders", () => {
     });
     assert.equal(merged[0]?.apiKey, "${input:chat.lm.secret.mySecret}");
     assert.ok(!merged[0]?.apiKey?.includes("sk-"));
+  });
+
+  it("passes model extras through to synced output", () => {
+    const withExtras: ModelCatalog = {
+      proxyBaseUrl: "http://127.0.0.1:3847",
+      models: [
+        {
+          id: "gpt-4.1",
+          name: "GPT 4.1",
+          endpointId: "corp",
+          toolCalling: false,
+          vision: false,
+          maxInputTokens: 128000,
+          maxOutputTokens: 8192,
+          thinking: true,
+          streaming: false,
+          apiType: "chat-completions",
+          extras: { family: "gpt", temperature: 0.2 },
+        },
+      ],
+    };
+    const merged = mergeChatLanguageModelsProviders([], withExtras);
+    const model = merged[0].models[0] as Record<string, unknown>;
+    assert.equal(model.thinking, true);
+    assert.equal(model.family, "gpt");
+    assert.equal(model.temperature, 0.2);
   });
 });

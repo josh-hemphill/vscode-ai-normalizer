@@ -116,3 +116,33 @@ jobs:
           body: ${{ steps.changelog.outputs.body }}
           generate_release_notes: false
           prerelease: true
+
+  publish-registries:
+    needs: package-vsix
+    runs-on: ubuntu-latest
+    environment: marketplace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Download VSIX
+        uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: dist
+      - run: npm install -g @vscode/vsce ovsx
+      - name: Verify VSIX contents
+        run: vsce ls --tree dist/ai-endpoint-normalizer.vsix
+      - name: Install OpenSSL
+        run: sudo apt-get update && sudo apt-get install -y openssl
+      - name: Publish to Visual Studio Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSIX_SIGNING_PFX_BASE64: ${{ secrets.VSIX_SIGNING_PFX_BASE64 }}
+          VSIX_SIGNING_PFX_PASSWORD: ${{ secrets.VSIX_SIGNING_PFX_PASSWORD }}
+        run: bash scripts/publish-marketplace.sh dist/ai-endpoint-normalizer.vsix
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: ovsx publish dist/ai-endpoint-normalizer.vsix -p "$OVSX_PAT" --pre-release

@@ -78,7 +78,7 @@ Press **F5** to launch an Extension Development Host (`.vscode` preLaunch runs `
 | `aiNormalizer.profiles` | `{}` | Inline named profiles |
 | `aiNormalizer.modelCachePath` | `""` | Discovered-models cache file (empty = global storage) |
 | `aiNormalizer.copilotByokSecretId` | `aiNormalizer` | `chat.lm.secret.*` id in synced `chatLanguageModels.json` |
-| `aiNormalizer.modelOverrides` | `{}` | Per-model overrides, keys `endpointId/modelId` |
+| `aiNormalizer.modelOverrides` | `{}` | Per-model overrides, keys `endpointId/modelId`; unknown keys pass through to synced `chatLanguageModels.json` model entries |
 | `aiNormalizer.endpoints` | `[]` | Upstream endpoints (see below) |
 | `aiNormalizer.syncTargets` | `[chatLanguageModels]` | Which consumers to update |
 | `aiNormalizer.inlineCompletion` | `{ enabled: false }` | Experimental FIM inline provider |
@@ -90,6 +90,7 @@ Press **F5** to launch an Extension Development Host (`.vscode` preLaunch runs `
 | `id` | yes | Stable id for routing and overrides |
 | `upstreamUrl` | yes | Chat completions URL upstream |
 | `adapter` | yes | `inline-xml-tools`, `openai-pass-through`, or `json-tools-in-text` |
+| `toolsPolicy` | no | `forward` (default) or `strip` to remove tool payload fields before forwarding |
 | `adapterProfile` | no | Named profile (e.g. `gemini-non-customtools`) |
 | `apiKeySecretId` | no | SecretStorage key (default `aiNormalizer.endpoint.<id>`) |
 | `discoverModels` | no | Discovery options (see auto-discovery example) |
@@ -185,6 +186,32 @@ Upstream returns `<tool_use>` blocks; Copilot needs JSON `tool_calls`.
 
 Run **AI Normalizer: Set Endpoint API Key** after saving settings.
 
+### Tool prompts (`inline-xml-tools` profiles)
+
+For endpoints using **`inline-xml-tools`** and a named **`adapterProfile`**, the proxy can inject extra guidance for upstreams that mishandle tools:
+
+| Layer | Behavior |
+|-------|----------|
+| **Tools preamble** | When the client sends `tools`, a built-in system message describes XML tool format + schema (see `gemini-non-customtools` in `aiNormalizer.profiles`). |
+| **`additionalSystemPrompts`** | Optional strings on the same profile; each becomes a separate `system` message **after** the tools preamble, **before** Copilot/user messages. |
+| **`openai-pass-through`** | No injection; request is forwarded unchanged. |
+
+Example tuning:
+
+```json
+{
+  "aiNormalizer.profiles": {
+    "gemini-non-customtools": {
+      "additionalSystemPrompts": [
+        "When the user requests an action, call a tool instead of only describing steps."
+      ]
+    }
+  }
+}
+```
+
+This does **not** remove or replace system messages already sent by Copilot.
+
 ### OpenAI-compatible pass-through (OpenRouter, vLLM)
 
 No tool translation; discovery still works.
@@ -246,6 +273,34 @@ Disable tools for a model that does not support Agent mode:
 ```
 
 Keys are always `endpointId/modelId` where `modelId` matches the upstream list id.
+
+Extra override keys are preserved in synced `chatLanguageModels.json` model objects. Useful fields include `thinking`, `streaming`, and provider-specific metadata.
+
+### Endpoints without tool calling
+
+If upstream security policy strips/blocks tool calls, use a chat-only route:
+
+```json
+{
+  "aiNormalizer.endpoints": [
+    {
+      "id": "corp-chat",
+      "upstreamUrl": "https://gateway.example/v1/chat/completions",
+      "adapter": "openai-pass-through",
+      "toolsPolicy": "strip",
+      "adapterProfile": "chat-only"
+    }
+  ],
+  "aiNormalizer.modelOverrides": {
+    "corp-chat/model-id": {
+      "toolCalling": false,
+      "thinking": true
+    }
+  }
+}
+```
+
+`toolsPolicy: "strip"` removes outbound `tools`/`tool_choice`, normalizes tool-role history to plain text, and strips assistant `tool_calls`. This keeps chat usable when agent/tool protocols are filtered.
 
 ### Manual pin + discovery
 
@@ -477,7 +532,7 @@ Run **Refresh Model Catalog** or **Sync Language Models** from any window after 
 | Proxy binary not found | `pnpm run build` (populates `bin/`); auto-detect also checks `target/release` and `target/debug` under the extension folder |
 | Proxy won't start (port in use) | Another window may already run the proxy — check Output for `Attaching to existing proxy`; or change `proxyPort` |
 | Second window shows proxy failed | Reload extension build with attach support; ensure first window’s proxy is healthy on `/health` |
-| Tools not invoked | Confirm `inline-xml-tools` + profile tags match upstream XML |
+| Tools not invoked | If endpoint blocks tools, switch to `openai-pass-through` + `toolsPolicy: "strip"` + `toolCalling: false` override (chat-only mode) |
 | Cursor vs Code path | Cache/sync uses `Cursor` or `Code` under `%APPDATA%` based on `vscode.env.appName` |
 | Garbled Output logs | Update extension + proxy build (ANSI stripped when spawned from VS Code) |
 
@@ -521,7 +576,7 @@ pnpm run test:integration
 ```
 
 Manual pre-publish checklist (Copilot BYOK, multi-window): [docs/TESTING.md](docs/TESTING.md).  
-Releases and Marketplace upload: [docs/PUBLISHING.md](docs/PUBLISHING.md).
+Releases, Marketplace, and Open VSX: [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 ## Security
 

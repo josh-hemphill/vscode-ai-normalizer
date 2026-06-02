@@ -15,6 +15,10 @@ const entryFromProxyRow = (
   vision: false,
   maxInputTokens: 128_000,
   maxOutputTokens: 8_192,
+  thinking: false,
+  streaming: true,
+  apiType: "chat-completions",
+  extras: {},
 });
 
 /** Lists model ids currently served by the local proxy (GET /v1/models). */

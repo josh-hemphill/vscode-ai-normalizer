@@ -21,6 +21,8 @@ export interface CapabilityDefaults {
 export interface NamedProfile {
   toolFormatProfile?: ToolFormatProfile;
   capabilityDefaults?: CapabilityDefaults;
+  /** Injected by inline-xml-tools after the tools preamble. */
+  additionalSystemPrompts?: string[];
 }
 
 export interface ModelConfig {
@@ -30,7 +32,12 @@ export interface ModelConfig {
   vision?: boolean;
   maxInputTokens?: number;
   maxOutputTokens?: number;
+  thinking?: boolean;
+  streaming?: boolean;
+  apiType?: string;
 }
+
+export type OverrideModelConfig = Partial<ModelConfig> & Record<string, unknown>;
 
 /** Per-endpoint upstream model list discovery. */
 export interface EndpointDiscoveryConfig {
@@ -47,6 +54,7 @@ export interface EndpointConfig {
   displayName?: string;
   upstreamUrl: string;
   adapter: "openai-pass-through" | "inline-xml-tools" | "json-tools-in-text";
+  toolsPolicy?: "forward" | "strip";
   adapterProfile?: string;
   apiKeySecretId?: string;
   /** Optional when discoverModels.enabled; merged with discovered catalog. */
@@ -80,7 +88,7 @@ export interface AiNormalizerSettings {
   profiles: Record<string, NamedProfile>;
   endpoints: EndpointConfig[];
   /** Keys: endpointId/modelId */
-  modelOverrides: Record<string, Partial<ModelConfig>>;
+  modelOverrides: Record<string, OverrideModelConfig>;
   syncTargets: SyncTargetConfig[];
   inlineCompletion: InlineCompletionConfig;
 }
@@ -98,6 +106,10 @@ export interface ModelCatalogEntry {
   vision: boolean;
   maxInputTokens: number;
   maxOutputTokens: number;
+  thinking: boolean;
+  streaming: boolean;
+  apiType?: string;
+  extras?: Record<string, unknown>;
 }
 
 export interface ModelCatalog {
@@ -114,6 +126,10 @@ export interface ResolvedModel {
   vision: boolean;
   maxInputTokens: number;
   maxOutputTokens: number;
+  thinking: boolean;
+  streaming: boolean;
+  apiType?: string;
+  extras: Record<string, unknown>;
 }
 
 export interface DiscoveredModelRow {
@@ -144,6 +160,18 @@ export const DEFAULT_SYNC_TARGETS: SyncTargetConfig[] = [
 ];
 
 export const BUILTIN_PROFILES: Record<string, NamedProfile> = {
+  "chat-only": {
+    capabilityDefaults: {
+      toolCalling: false,
+      vision: false,
+      maxInputTokens: 128_000,
+      maxOutputTokens: 8_192,
+    },
+    additionalSystemPrompts: [
+      "You are a coding assistant. Do not emit tool calls, XML tags, or function-call JSON.",
+      "Provide concise explanations and concrete code edits in fenced code blocks when helpful.",
+    ],
+  },
   "gemini-non-customtools": {
     toolFormatProfile: {
       toolCallOpen: "<tool_use>",

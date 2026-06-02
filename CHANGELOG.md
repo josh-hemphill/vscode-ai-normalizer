@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Release CI publishes pre-release VSIX to Visual Studio Marketplace and Open VSX (optional manifest signing via PFX secrets)
+- `additionalSystemPrompts` on `aiNormalizer.profiles` for `inline-xml-tools` endpoints
+- `chat-only` built-in profile and `toolsPolicy` endpoint mode (`forward` / `strip`) for tool-blocked upstreams
+- `modelOverrides` passthrough of extra model fields (for example `thinking`, `streaming`) into synced `chatLanguageModels.json`
+
 ### Fixed
 
 ### Security

@@ -65,6 +65,22 @@ const waitForHealth = async (
   return false;
 };
 
+const warnOnStripWithInlineAdapter = (
+  log: vscode.OutputChannel,
+  settings: ReturnType<typeof getSettings>
+): void => {
+  for (const ep of settings.endpoints) {
+    if (
+      ep.toolsPolicy === "strip" &&
+      (ep.adapter === "inline-xml-tools" || ep.adapter === "json-tools-in-text")
+    ) {
+      log.appendLine(
+        `Warning: endpoint "${ep.id}" uses toolsPolicy=strip with ${ep.adapter}. Prefer openai-pass-through for tool-blocked upstreams.`
+      );
+    }
+  }
+};
+
 /** POST current settings to a running proxy and persist config on disk. */
 const applyProxyPayload = async (
   context: vscode.ExtensionContext,
@@ -73,7 +89,9 @@ const applyProxyPayload = async (
   options?: { allowEmpty?: boolean }
 ): Promise<boolean> => {
   const cache = await loadModelCacheForContext(context);
-  const payload = await buildProxyPayload(context, getSettings(), cache);
+  const settings = getSettings();
+  warnOnStripWithInlineAdapter(log, settings);
+  const payload = await buildProxyPayload(context, settings, cache);
   const modelCount = countPayloadModels(payload);
   if (modelCount === 0 && !options?.allowEmpty) {
     const proxyCatalog = await fetchModelCatalogFromProxy(proxyBaseUrl(port));
@@ -136,6 +154,7 @@ export const startProxy = async (
 
   const settings = getSettings();
   const port = settings.proxyPort;
+  warnOnStripWithInlineAdapter(log, settings);
 
   if (!options?.skipDiscovery) {
     await refreshModelCacheIfNeeded(context, log);

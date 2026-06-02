@@ -4,7 +4,7 @@ use crate::openai::{
     StreamChunk, StreamChoice, StreamDelta, StreamToolCallDelta, StreamToolFunctionDelta,
     ToolCall, ToolCallFunction,
 };
-use crate::profiles::ToolFormatProfile;
+use crate::profiles::{NamedProfile, ToolFormatProfile};
 use axum::body::Body;
 use axum::response::Response;
 use axum::http::{header, StatusCode};
@@ -21,9 +21,8 @@ impl InlineXmlToolsAdapter {
         ctx: &AdapterContext,
         request: ChatCompletionRequest,
     ) -> Result<Response, AdapterError> {
-        let profile = &ctx.resolved.profile.tool_format_profile;
         let stream = request.stream.unwrap_or(false);
-        let upstream_body = transform_request(&request, profile)?;
+        let upstream_body = transform_request(&request, &ctx.resolved.profile)?;
         let upstream = ctx.resolved.endpoint.upstream_url.clone();
         let mut req = ctx.client.post(&upstream).json(&upstream_body);
         if let Some(key) = &ctx.resolved.endpoint.api_key {
@@ -50,7 +49,12 @@ impl InlineXmlToolsAdapter {
             .unwrap_or("")
             .to_string();
         if stream || content_type.contains("text/event-stream") {
-            return transform_sse_response(resp, &request.model, profile).await;
+            return transform_sse_response(
+                resp,
+                &request.model,
+                &ctx.resolved.profile.tool_format_profile,
+            )
+            .await;
         }
         let bytes = resp
             .bytes()
@@ -68,8 +72,9 @@ impl InlineXmlToolsAdapter {
 
 fn transform_request(
     request: &ChatCompletionRequest,
-    profile: &ToolFormatProfile,
+    named_profile: &NamedProfile,
 ) -> Result<Value, AdapterError> {
+    let profile = &named_profile.tool_format_profile;
     let mut messages: Vec<Value> = Vec::new();
     if let Some(tools) = &request.tools {
         if !tools.is_empty() {
@@ -77,6 +82,15 @@ fn transform_request(
             messages.push(serde_json::json!({
                 "role": "system",
                 "content": preamble
+            }));
+        }
+    }
+    for extra in &named_profile.additional_system_prompts {
+        let trimmed = extra.trim();
+        if !trimmed.is_empty() {
+            messages.push(serde_json::json!({
+                "role": "system",
+                "content": trimmed
             }));
         }
     }
@@ -402,8 +416,8 @@ fn now_secs() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::openai::{ToolCall, ToolCallFunction};
-    use crate::profiles::ToolFormatProfile;
+    use crate::openai::{ChatCompletionRequest, ChatMessage, ToolCall, ToolCallFunction};
+    use crate::profiles::{NamedProfile, ToolFormatProfile};
 
     fn default_profile() -> ToolFormatProfile {
         ToolFormatProfile::default()
@@ -453,6 +467,62 @@ mod tests {
         assert!(encoded.contains("<invoke>"));
         assert!(encoded.contains("tool=\"search\""));
         assert!(encoded.contains("call_id=\"c1\""));
+    }
+
+    #[test]
+    fn transform_request_inserts_additional_system_prompts_after_preamble() {
+        let mut named = NamedProfile::default();
+        named.additional_system_prompts = vec!["Prefer tools for actions.".into()];
+        let req = ChatCompletionRequest {
+            model: "test".into(),
+            messages: vec![ChatMessage {
+                role: "user".into(),
+                content: Some(MessageContent::Text("hello".into())),
+                tool_calls: None,
+                tool_call_id: None,
+                name: None,
+            }],
+            tools: Some(vec![serde_json::json!({
+                "type": "function",
+                "function": { "name": "demo", "parameters": {} }
+            })]),
+            tool_choice: None,
+            stream: None,
+        };
+        let body = transform_request(&req, &named).expect("transform");
+        let msgs = body["messages"].as_array().expect("messages");
+        assert_eq!(msgs.len(), 3);
+        assert!(
+            msgs[0]["content"]
+                .as_str()
+                .unwrap()
+                .contains("XML format")
+        );
+        assert_eq!(msgs[1]["content"], "Prefer tools for actions.");
+        assert_eq!(msgs[2]["role"], "user");
+    }
+
+    #[test]
+    fn transform_request_inserts_extras_without_tools_preamble() {
+        let mut named = NamedProfile::default();
+        named.additional_system_prompts = vec!["Endpoint tuning.".into()];
+        let req = ChatCompletionRequest {
+            model: "test".into(),
+            messages: vec![ChatMessage {
+                role: "user".into(),
+                content: Some(MessageContent::Text("hi".into())),
+                tool_calls: None,
+                tool_call_id: None,
+                name: None,
+            }],
+            tools: None,
+            tool_choice: None,
+            stream: None,
+        };
+        let body = transform_request(&req, &named).expect("transform");
+        let msgs = body["messages"].as_array().expect("messages");
+        assert_eq!(msgs.len(), 2);
+        assert_eq!(msgs[0]["content"], "Endpoint tuning.");
     }
 
     #[test]

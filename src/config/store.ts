@@ -15,6 +15,7 @@ import type {
   EndpointConfig,
   ModelCacheFile,
   NamedProfile,
+  OverrideModelConfig,
   ProxyConfigPayload,
   ResolvedModel,
 } from "./schema.ts";
@@ -33,7 +34,7 @@ export const getSettings = (): AiNormalizerSettings => {
     copilotByokSecretId: cfg.get<string>("copilotByokSecretId", "aiNormalizer"),
     profiles: cfg.get<Record<string, NamedProfile>>("profiles", {}),
     endpoints: cfg.get<EndpointConfig[]>("endpoints", []),
-    modelOverrides: cfg.get<Record<string, Partial<import("./schema.ts").ModelConfig>>>(
+    modelOverrides: cfg.get<Record<string, OverrideModelConfig>>(
       "modelOverrides",
       {}
     ),
